@@ -34,6 +34,14 @@ data class User(
 )
 
 @Serializable
+data class RegistrationResponse(
+    val token: String,
+    val userId: Int,
+    val userName: String,
+    val email: String
+)
+
+@Serializable
 data class CreateUserRequest(
     val userName: String,
     val email: String,
