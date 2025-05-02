@@ -75,7 +75,8 @@ fun Route.authRoute() {
         try {
             val request = call.receive<LoginRequest>()
 
-            val user = userList.firstOrNull {
+
+            val user = DataRepository.userList.firstOrNull {
                 it.email == request.email && it.password == request.password
             } ?: run {
                 call.respond(
@@ -84,7 +85,6 @@ fun Route.authRoute() {
                 )
                 return@post
             }
-
             val token = generateJWTToken(call.application, user)
             call.respond(
                 HttpStatusCode.OK,
@@ -221,19 +221,27 @@ fun Route.favoritesRoute() {
                 ErrorResponse("User not found", 404)
             )
 
+
             if (!DataRepository.sneakerList.any { it.id == sneakerId }) return@post call.respond(
                 HttpStatusCode.NotFound,
                 ErrorResponse("Sneaker not found", 404)
             )
 
+
+            val currentFavorites = DataRepository.userList[userIndex].favoriteSneakerIds
+            if (currentFavorites.contains(sneakerId)) {
+                call.respond(HttpStatusCode.Conflict, ErrorResponse("Sneaker already in favorites", 409))
+                return@post
+            }
+
+
             val updatedUser = DataRepository.userList[userIndex].copy(
-                favoriteSneakerIds = DataRepository.userList[userIndex].favoriteSneakerIds + sneakerId
+                favoriteSneakerIds = currentFavorites + sneakerId
             )
             DataRepository.userList[userIndex] = updatedUser
 
-            call.respond(mapOf("message" to "Sneaker added to favorites"))
+            call.respond(HttpStatusCode.OK, mapOf("message" to "Sneaker added to favorites"))
         }
-
         delete("/favorites/{sneakerId}") {
             val sneakerId = call.parameters["sneakerId"]?.toIntOrNull() ?: return@delete call.respond(
                 HttpStatusCode.BadRequest,

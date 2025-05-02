@@ -8,7 +8,6 @@ object DataRepository {
     val sneakerList = mutableListOf<Sneaker>()
 
     init {
-
         sneakerList.addAll(
             listOf(
                 Sneaker(
