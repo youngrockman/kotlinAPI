@@ -10,6 +10,19 @@ object DataRepository {
     val userList = mutableListOf<User>()
     val sneakerList = mutableListOf<Sneaker>()
 
+    // DataRepository.kt
+    init {
+        userList.add(
+            User(
+                userId = 1,
+                userName = "Ivan",
+                email = "ivan@mail.com",
+                password = "password123"
+            )
+        )
+    }
+
+
     init {
         sneakerList.addAll(
             listOf(
