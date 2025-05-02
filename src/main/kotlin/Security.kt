@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
 fun Application.configureSecurity() {
     // Please read the jwt property from the config file if you are using EngineMain
     val jwtAudience = environment.config.property("jwt.audience").getString()
-    val jwtIssue = environment.config.property("jwt.issue").getString()
+    val jwtIssue = environment.config.property("jwt.issuer").getString()
     val jwtRealm = environment.config.property("jwt.realm").getString()
     val jwtSecret = environment.config.property("jwt.secret").getString()
     install(Authentication)

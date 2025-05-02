@@ -2,6 +2,10 @@ package com.example
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.example.rout.authRoute
+import com.example.rout.favoritesRoute
+import com.example.rout.sneakersRoute
+import com.example.route.DataRepository
 import io.ktor.resources.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -17,9 +21,5 @@ fun Application.configureSerialization() {
     install(ContentNegotiation) {
         json()
     }
-    routing {
-        get("/json/kotlinx-serialization") {
-                call.respond(mapOf("hello" to "world"))
-            }
-    }
+
 }

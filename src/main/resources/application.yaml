@@ -1,11 +1,12 @@
 ktor:
-    application:
-        modules:
-            - com.example.ApplicationKt.module
-    deployment:
-        port: 8080
+  deployment:
+    port: 8080
+    watch: [ classes ]
+  application:
+    modules: [ com.example.ApplicationKt.module ]
+
 jwt:
-  secret: "my secret value"
-  issue: "http://0.0.0.0:8080"
-  audience: "http://0.0.0.0:8080/profile"
-  realm: "ktor sample app"
+  issuer: "http://0.0.0.0:8080/"
+  audience: "http://0.0.0.0:8080/api"
+  realm: "Ktor Server"
+  secret: "supersecretkey"
