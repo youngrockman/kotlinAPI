@@ -68,10 +68,13 @@ data class ErrorResponse(
     val errorCode: Int
 )
 
+val userList = mutableListOf<User>()
+
 fun Route.authRoute() {
     post("/login") {
         try {
             val request = call.receive<LoginRequest>()
+
 
             val user = DataRepository.userList.firstOrNull {
                 it.email == request.email && it.password == request.password
@@ -105,7 +108,7 @@ fun Route.authRoute() {
         try {
             val request = call.receive<CreateUserRequest>()
 
-            if (DataRepository.userList.any { it.email == request.email }) {
+            if (userList.any { it.email == request.email }) {
                 call.respond(
                     HttpStatusCode.Conflict,
                     ErrorResponse("Email already exists", HttpStatusCode.Conflict.value)
@@ -114,13 +117,13 @@ fun Route.authRoute() {
             }
 
             val newUser = User(
-                userId = DataRepository.userList.size + 1,
+                userId = userList.size + 1,
                 userName = request.userName,
                 email = request.email,
                 password = request.password
             )
 
-            DataRepository.userList.add(newUser)
+            userList.add(newUser)
             val token = generateJWTToken(call.application, newUser)
 
             call.respond(
@@ -144,7 +147,7 @@ fun Route.authRoute() {
     authenticate("auth-jwt") {
         get("/profile/{userId}") {
             val userId = call.parameters["userId"]?.toIntOrNull()
-            val user = userId?.let { id -> DataRepository.userList.firstOrNull { it.userId == id } }
+            val user = userId?.let { id -> userList.firstOrNull { it.userId == id } }
 
             if (user != null) {
                 call.respond(user)
@@ -218,16 +221,19 @@ fun Route.favoritesRoute() {
                 ErrorResponse("User not found", 404)
             )
 
+
             if (!DataRepository.sneakerList.any { it.id == sneakerId }) return@post call.respond(
                 HttpStatusCode.NotFound,
                 ErrorResponse("Sneaker not found", 404)
             )
+
 
             val currentFavorites = DataRepository.userList[userIndex].favoriteSneakerIds
             if (currentFavorites.contains(sneakerId)) {
                 call.respond(HttpStatusCode.Conflict, ErrorResponse("Sneaker already in favorites", 409))
                 return@post
             }
+
 
             val updatedUser = DataRepository.userList[userIndex].copy(
                 favoriteSneakerIds = currentFavorites + sneakerId
@@ -236,7 +242,6 @@ fun Route.favoritesRoute() {
 
             call.respond(HttpStatusCode.OK, mapOf("message" to "Sneaker added to favorites"))
         }
-
         delete("/favorites/{sneakerId}") {
             val sneakerId = call.parameters["sneakerId"]?.toIntOrNull() ?: return@delete call.respond(
                 HttpStatusCode.BadRequest,
@@ -265,13 +270,16 @@ fun Route.favoritesRoute() {
     }
 }
 
+
+
 private fun generateJWTToken(application: Application, user: User): String {
     val config = application.environment.config
     return JWT.create()
         .withAudience(config.property("jwt.audience").getString())
         .withIssuer(config.property("jwt.issuer").getString())
         .withClaim("userId", user.userId)
+        .withClaim("userName", user.userName)
         .withClaim("email", user.email)
-        .withExpiresAt(Date(System.currentTimeMillis() + 86_400_000))
+        .withExpiresAt(Date(System.currentTimeMillis() + 60000))
         .sign(Algorithm.HMAC256(config.property("jwt.secret").getString()))
 }
