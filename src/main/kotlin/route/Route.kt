@@ -21,7 +21,8 @@ data class Sneaker(
     val price: Double,
     val imageUrl: String,
     val category: String,
-    val isPopular: Boolean = false
+    val isPopular: Boolean = false,
+    val isFavorite: Boolean = false
 )
 
 @Serializable
