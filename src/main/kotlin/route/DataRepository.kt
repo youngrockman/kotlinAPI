@@ -35,7 +35,8 @@ object DataRepository {
                     imageUrl = "mainsneakers",
                     category = "Popular",
                     isPopular = true,
-                    isFavorite = false
+                    isFavorite = false,
+                    quantity = 2
                 ),
                 Sneaker(
                     id = 2,
@@ -44,7 +45,8 @@ object DataRepository {
                     price = 850.0,
                     imageUrl = "mainsneakers",
                     category = "Popular",
-                    isFavorite = false
+                    isFavorite = false,
+                    quantity = 1
                 ),
                 Sneaker(
                   id = 3,
@@ -54,7 +56,8 @@ object DataRepository {
                   imageUrl = "mainsneakers",
                   category = "Outdoor",
                   isPopular = true,
-                  isFavorite = false
+                  isFavorite = false,
+                  quantity = 1
 
 
                 )

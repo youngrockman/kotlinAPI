@@ -22,7 +22,8 @@ data class Sneaker(
     val imageUrl: String,
     val category: String,
     val isPopular: Boolean = false,
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    val quantity: Int
 )
 
 @Serializable
@@ -284,21 +285,26 @@ fun Route.cartRoute() {
 
             val userIndex = DataRepository.userList.indexOfFirst { it.userId == userId }
             val user = DataRepository.userList[userIndex]
-            if (sneakerId !in DataRepository.sneakerList.map { it.id }) return@post call.respond(
-                HttpStatusCode.NotFound, ErrorResponse("Sneaker not found", 404)
-            )
+            val currentCart = user.cart.toMutableList()
+            currentCart.add(sneakerId)
 
-            val updatedCart = user.cart + sneakerId
-            DataRepository.userList[userIndex] = user.copy(cart = updatedCart)
+            DataRepository.userList[userIndex] = user.copy(cart = currentCart)
             call.respond(HttpStatusCode.OK, mapOf("message" to "Added to cart"))
         }
+
 
         get("/cart") {
             val principal = call.principal<JWTPrincipal>()!!
             val userId = principal.getClaim("userId", Int::class)!!
             val user = DataRepository.userList.first { it.userId == userId }
 
-            val items = user.cart.mapNotNull { id -> DataRepository.sneakerList.find { it.id == id } }
+
+            val itemCounts = user.cart.groupingBy { it }.eachCount()
+
+            val items = itemCounts.mapNotNull { (id, count) ->
+                DataRepository.sneakerList.find { it.id == id }?.copy(quantity = count)
+            }
+
             call.respond(items)
         }
 
@@ -334,6 +340,39 @@ fun Route.cartRoute() {
                 "delivery" to delivery,
                 "finalTotal" to finalTotal
             ))
+        }
+
+        put("/cart/update-quantity") {
+            val principal = call.principal<JWTPrincipal>()!!
+            val userId = principal.getClaim("userId", Int::class)!!
+            val productId = call.request.queryParameters["productId"]?.toIntOrNull()
+            val quantity = call.request.queryParameters["quantity"]?.toIntOrNull()
+
+            if (productId == null || quantity == null || quantity < 0) {
+                return@put call.respond(
+                    HttpStatusCode.BadRequest,
+                    ErrorResponse("Invalid productId or quantity", 400)
+                )
+            }
+
+            val userIndex = DataRepository.userList.indexOfFirst { it.userId == userId }
+            if (userIndex == -1) return@put call.respond(
+                HttpStatusCode.NotFound, ErrorResponse("User not found", 404)
+            )
+
+            val currentCart = DataRepository.userList[userIndex].cart.toMutableList()
+
+
+            val updatedCart = currentCart.filter { it != productId }.toMutableList()
+
+
+            repeat(quantity) {
+                updatedCart.add(productId)
+            }
+
+            DataRepository.userList[userIndex] = DataRepository.userList[userIndex].copy(cart = updatedCart)
+
+            call.respond(HttpStatusCode.OK, mapOf("message" to "Cart quantity updated"))
         }
     }
 }
