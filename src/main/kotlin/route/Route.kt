@@ -31,7 +31,8 @@ data class User(
     val userName: String,
     val email: String,
     val password: String,
-    val favoriteSneakerIds: List<Int> = emptyList()
+    val favoriteSneakerIds: List<Int> = emptyList(),
+    val cart: List<Int> = emptyList()
 )
 
 @Serializable
@@ -270,6 +271,73 @@ fun Route.favoritesRoute() {
         }
     }
 }
+
+
+fun Route.cartRoute() {
+    authenticate("auth-jwt") {
+        post("/cart/{sneakerId}") {
+            val principal = call.principal<JWTPrincipal>()!!
+            val userId = principal.getClaim("userId", Int::class)!!
+            val sneakerId = call.parameters["sneakerId"]?.toIntOrNull() ?: return@post call.respond(
+                HttpStatusCode.BadRequest, ErrorResponse("Invalid sneaker ID", 400)
+            )
+
+            val userIndex = DataRepository.userList.indexOfFirst { it.userId == userId }
+            val user = DataRepository.userList[userIndex]
+            if (sneakerId !in DataRepository.sneakerList.map { it.id }) return@post call.respond(
+                HttpStatusCode.NotFound, ErrorResponse("Sneaker not found", 404)
+            )
+
+            val updatedCart = user.cart + sneakerId
+            DataRepository.userList[userIndex] = user.copy(cart = updatedCart)
+            call.respond(HttpStatusCode.OK, mapOf("message" to "Added to cart"))
+        }
+
+        get("/cart") {
+            val principal = call.principal<JWTPrincipal>()!!
+            val userId = principal.getClaim("userId", Int::class)!!
+            val user = DataRepository.userList.first { it.userId == userId }
+
+            val items = user.cart.mapNotNull { id -> DataRepository.sneakerList.find { it.id == id } }
+            call.respond(items)
+        }
+
+        delete("/cart/{sneakerId}") {
+            val principal = call.principal<JWTPrincipal>()!!
+            val userId = principal.getClaim("userId", Int::class)!!
+            val sneakerId = call.parameters["sneakerId"]?.toIntOrNull() ?: return@delete call.respond(
+                HttpStatusCode.BadRequest, ErrorResponse("Invalid sneaker ID", 400)
+            )
+
+            val userIndex = DataRepository.userList.indexOfFirst { it.userId == userId }
+            val updatedCart = DataRepository.userList[userIndex].cart - sneakerId
+            DataRepository.userList[userIndex] = DataRepository.userList[userIndex].copy(cart = updatedCart)
+            call.respond(mapOf("message" to "Removed from cart"))
+        }
+
+        get("/cart/total") {
+            val principal = call.principal<JWTPrincipal>()!!
+            val userId = principal.getClaim("userId", Int::class)!!
+            val user = DataRepository.userList.first { it.userId == userId }
+
+            val items = user.cart.mapNotNull { id ->
+                DataRepository.sneakerList.find { it.id == id }
+            }
+
+            val total = items.sumOf { it.price }
+            val delivery = if (total > 500) 0.0 else 60.0
+            val finalTotal = total + delivery
+
+            call.respond(mapOf(
+                "items" to items,
+                "total" to total,
+                "delivery" to delivery,
+                "finalTotal" to finalTotal
+            ))
+        }
+    }
+}
+
 
 
 

@@ -16,8 +16,8 @@ object DataRepository {
             User(
                 userId = 1,
                 userName = "Ivan",
-                email = "ivan@mail.com",
-                password = "password123",
+                email = "123",
+                password = "123",
                 favoriteSneakerIds = mutableListOf()
             )
         )
