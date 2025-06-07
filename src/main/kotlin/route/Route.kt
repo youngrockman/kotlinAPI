@@ -390,6 +390,17 @@ fun Route.cartRoute() {
     }
 }
 
+fun Route.searchSneakersRoute() {
+    get("/sneakers/search") {
+        val query = call.request.queryParameters["query"]?.lowercase() ?: ""
+        val result = DataRepository.sneakerList.filter {
+            it.name.lowercase().contains(query) || it.description.lowercase().contains(query)
+        }
+        call.respond(result)
+    }
+}
+
+
 
 
 

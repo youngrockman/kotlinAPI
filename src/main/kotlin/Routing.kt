@@ -2,10 +2,7 @@ package com.example
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.example.rout.authRoute
-import com.example.rout.cartRoute
-import com.example.rout.favoritesRoute
-import com.example.rout.sneakersRoute
+import com.example.rout.*
 import io.ktor.resources.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -24,5 +21,6 @@ fun Application.configureRouting() {
         sneakersRoute()
         favoritesRoute()
         cartRoute()
+        searchSneakersRoute()
     }
 }
