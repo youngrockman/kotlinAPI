@@ -342,6 +342,19 @@ fun Route.cartRoute() {
             ))
         }
 
+        delete("/cart/remove-all/{sneakerId}") {
+            val principal = call.principal<JWTPrincipal>()!!
+            val userId = principal.getClaim("userId", Int::class)!!
+            val sneakerId = call.parameters["sneakerId"]?.toIntOrNull() ?: return@delete call.respond(
+                HttpStatusCode.BadRequest, ErrorResponse("Invalid sneaker ID", 400)
+            )
+
+            val userIndex = DataRepository.userList.indexOfFirst { it.userId == userId }
+            val updatedCart = DataRepository.userList[userIndex].cart.filter { it != sneakerId }
+            DataRepository.userList[userIndex] = DataRepository.userList[userIndex].copy(cart = updatedCart)
+            call.respond(mapOf("message" to "All items removed from cart"))
+        }
+
         put("/cart/update-quantity") {
             val principal = call.principal<JWTPrincipal>()!!
             val userId = principal.getClaim("userId", Int::class)!!

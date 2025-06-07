@@ -36,7 +36,7 @@ object DataRepository {
                     category = "Popular",
                     isPopular = true,
                     isFavorite = false,
-                    quantity = 2
+                    quantity = 1
                 ),
                 Sneaker(
                     id = 2,
